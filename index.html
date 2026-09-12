@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>NangkringAceh</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,Helvetica,sans-serif;background:#09090b;color:#fff;overflow-x:hidden}
@@ -61,7 +59,6 @@ header{padding:18px 16px 14px;background:#09090b;position:sticky;top:0;z-index:1
 }
 </style>
 </head>
-
 <body>
 
 <header>
@@ -84,7 +81,6 @@ header{padding:18px 16px 14px;background:#09090b;position:sticky;top:0;z-index:1
 </div>
 
 <div id="map"></div>
-
 <div class="status" id="status">🔄 Menghubungkan ke database tempat...</div>
 
 <div class="section">
@@ -107,27 +103,17 @@ NangkringAceh • Jelajah Aceh
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script>
-/* ======================================================
-   MAP + MARKER CLUSTER
-====================================================== */
 const map = L.map('map').setView([4.6951, 96.7494], 8);
-
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '© OpenStreetMap'
+  maxZoom: 19, attribution: '© OpenStreetMap'
 }).addTo(map);
 
 const markerCluster = L.markerClusterGroup({
-  maxClusterRadius: 60,
-  spiderfyOnMaxZoom: true,
-  showCoverageOnHover: false,
-  zoomToBoundsOnClick: true
+  maxClusterRadius: 60, spiderfyOnMaxZoom: true,
+  showCoverageOnHover: false, zoomToBoundsOnClick: true
 });
 map.addLayer(markerCluster);
 
-/* ======================================================
-   VARIABLE
-====================================================== */
 let allPlaces = [];
 let markerMap = new Map();
 let userMarker = null;
@@ -135,9 +121,7 @@ let userLocation = null;
 let activeFilter = 'all';
 let lastLoad = 0;
 
-function setStatus(text){
-  document.getElementById('status').textContent = text;
-}
+function setStatus(text){ document.getElementById('status').textContent = text; }
 
 function getIcon(type){
   const icons = {coffee:'☕',cafe:'🍵',restaurant:'🍜',fast_food:'🍔',bar:'🍹',tourism:'🌴'};
@@ -147,42 +131,19 @@ function getIcon(type){
 function getCategory(tags){
   const name = (tags.name || tags['name:id'] || tags['name:en'] || '').toLowerCase();
   const cuisine = (tags.cuisine || '').toLowerCase();
-
-  if (tags.amenity === 'coffee_shop' || tags.shop === 'coffee' ||
-      cuisine === 'coffee' || cuisine === 'coffee_shop') return 'coffee';
+  if (tags.amenity === 'coffee_shop' || tags.shop === 'coffee' || cuisine === 'coffee' || cuisine === 'coffee_shop') return 'coffee';
   if (/kopi|coffee|warkop|warung kopi|kedai kopi/.test(name)) return 'coffee';
-
   if (tags.amenity === 'cafe') return 'cafe';
   if (/kafe|cafe|coffee shop/.test(name)) return 'cafe';
-
   if (tags.amenity === 'restaurant') return 'restaurant';
   if (tags.amenity === 'food_court') return 'restaurant';
   if (/resto|restoran|rumah makan|rm\.|warung makan|seafood|bakso|mie|nasi|sate|ayam|ikan bakar|martabak/.test(name)) return 'restaurant';
-
   if (tags.amenity === 'fast_food') return 'fast_food';
-
-  if (tags.amenity === 'bar' || tags.amenity === 'pub' ||
-      tags.amenity === 'biergarten' || tags.amenity === 'nightclub') return 'bar';
-
-  if (tags.tourism === 'attraction' || tags.tourism === 'viewpoint' ||
-      tags.tourism === 'theme_park' || tags.tourism === 'zoo' ||
-      tags.tourism === 'museum' || tags.tourism === 'gallery' ||
-      tags.tourism === 'picnic_site') return 'tourism';
-
-  if (tags.leisure === 'park' || tags.leisure === 'garden' ||
-      tags.leisure === 'nature_reserve' || tags.leisure === 'beach_resort' ||
-      tags.leisure === 'water_park') return 'tourism';
-
-  if (tags.historic === 'monument' || tags.historic === 'memorial' ||
-      tags.historic === 'castle' || tags.historic === 'fort' ||
-      tags.historic === 'ruins' || tags.historic === 'archaeological_site' ||
-      tags.historic === 'tomb') return 'tourism';
-
-  if (tags.tourism === 'hotel' || tags.tourism === 'guest_house' ||
-      tags.tourism === 'hostel' || tags.tourism === 'motel' ||
-      tags.tourism === 'apartment' || tags.tourism === 'chalet' ||
-      tags.tourism === 'camp_site') return 'all';
-
+  if (tags.amenity === 'bar' || tags.amenity === 'pub') return 'bar';
+  if (tags.tourism === 'attraction' || tags.tourism === 'viewpoint' || tags.tourism === 'theme_park' || tags.tourism === 'zoo' || tags.tourism === 'museum' || tags.tourism === 'gallery') return 'tourism';
+  if (tags.leisure === 'park' || tags.leisure === 'garden' || tags.leisure === 'nature_reserve' || tags.leisure === 'beach_resort' || tags.leisure === 'water_park') return 'tourism';
+  if (tags.historic === 'monument' || tags.historic === 'memorial' || tags.historic === 'castle' || tags.historic === 'fort' || tags.historic === 'ruins' || tags.historic === 'tomb') return 'tourism';
+  if (tags.tourism === 'hotel' || tags.tourism === 'guest_house' || tags.tourism === 'hostel' || tags.tourism === 'motel' || tags.tourism === 'apartment' || tags.tourism === 'chalet') return 'all';
   return 'all';
 }
 
@@ -190,10 +151,7 @@ function distanceKm(lat1, lon1, lat2, lon2){
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 +
-            Math.cos(lat1*Math.PI/180) *
-            Math.cos(lat2*Math.PI/180) *
-            Math.sin(dLon/2)**2;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
@@ -203,49 +161,32 @@ function formatDistance(km){
   return km.toFixed(1) + ' km';
 }
 
-/* ======================================================
-   LOAD DATA VIA SERVERLESS FUNCTION
-====================================================== */
 async function loadAcehPlaces(){
   setStatus('🔄 Mengambil seluruh data tempat di Aceh...');
-
   const bbox = '1.6,94.9,6.1,98.5';
-
   const query = `
-[out:json][timeout:180];
+[out:json][timeout:25];
 (
-  nwr["amenity"~"^(cafe|coffee_shop|restaurant|fast_food|food_court|bar|pub|biergarten|ice_cream|juice_bar|internet_cafe|nightclub)$"](${bbox});
-  nwr["shop"~"^(coffee|bakery|pastry|confectionery|tea|beverages|ice_cream)$"](${bbox});
-  nwr["cuisine"~"coffee|coffee_shop|tea|indonesian|acehnese|asian|pizza|burger|chicken|seafood|noodle|rice",i](${bbox});
-  nwr["tourism"~"^(attraction|viewpoint|theme_park|zoo|museum|gallery|picnic_site)$"](${bbox});
-  nwr["leisure"~"^(park|garden|nature_reserve|beach_resort|water_park|sports_centre|fitness_centre|playground|picnic_table)$"](${bbox});
-  nwr["historic"~"^(monument|memorial|castle|fort|ruins|archaeological_site|tomb)$"](${bbox});
-  nwr["name"~"kopi|coffee|kafe|cafe|warkop|kedai|resto|restoran|rumah makan|warung|nongkrong|nongki",i](${bbox});
+  nwr["amenity"~"^(cafe|coffee_shop|restaurant|fast_food|food_court|bar|pub|ice_cream|juice_bar|internet_cafe)$"](${bbox});
+  nwr["shop"~"^(coffee|bakery|tea|beverages|ice_cream)$"](${bbox});
+  nwr["tourism"~"^(attraction|viewpoint|theme_park|zoo|museum|gallery)$"](${bbox});
+  nwr["leisure"~"^(park|garden|nature_reserve|beach_resort|water_park)$"](${bbox});
+  nwr["historic"~"^(monument|memorial|castle|fort|ruins|tomb)$"](${bbox});
 );
 out center tags qt;
 `;
 
   try {
     setStatus('🔄 Menghubungkan ke server data...');
-
     const response = await fetch('/api/overpass', {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: query
     });
-
-    if (!response.ok) {
-      throw new Error('Server error: ' + response.status);
-    }
-
+    if (!response.ok) throw new Error('Server error: ' + response.status);
     const data = await response.json();
-
-    if (!data.elements || data.elements.length === 0) {
-      throw new Error('Tidak ada data ditemukan');
-    }
-
+    if (!data.elements || data.elements.length === 0) throw new Error('Tidak ada data');
     processPlaces(data.elements);
-
   } catch (error) {
     console.error('Gagal load:', error);
     throw error;
@@ -255,111 +196,58 @@ out center tags qt;
 function processPlaces(elements){
   allPlaces = [];
   const used = new Set();
-
   elements.forEach(el => {
     const tags = el.tags || {};
-    let lat = el.lat;
-    let lon = el.lon;
-
-    if ((!lat || !lon) && el.center){
-      lat = el.center.lat;
-      lon = el.center.lon;
-    }
-
+    let lat = el.lat, lon = el.lon;
+    if ((!lat || !lon) && el.center){ lat = el.center.lat; lon = el.center.lon; }
     if (lat === undefined || lon === undefined) return;
-
     const name = tags.name || tags['name:id'] || tags['name:en'];
     if (!name) return;
-
     const category = getCategory(tags);
     if (category === 'all') return;
-
-    const key = name.toLowerCase().trim() + '|' +
-                Number(lat).toFixed(5) + '|' +
-                Number(lon).toFixed(5);
-
+    const key = name.toLowerCase().trim() + '|' + Number(lat).toFixed(5) + '|' + Number(lon).toFixed(5);
     if (used.has(key)) return;
     used.add(key);
-
     allPlaces.push({
       id: el.id + '_' + el.type,
-      name: name,
-      lat: Number(lat),
-      lon: Number(lon),
-      category: category,
-      tags: tags,
+      name: name, lat: Number(lat), lon: Number(lon),
+      category: category, tags: tags,
       searchText: buildSearchText(name, tags)
     });
   });
-
   lastLoad = Date.now();
-
   document.getElementById('count').textContent = allPlaces.length + ' tempat';
   setStatus('✅ ' + allPlaces.length + ' tempat ditemukan dari OpenStreetMap');
-
   renderPlaces();
   updateMarkers();
 }
 
 function buildSearchText(name, tags){
-  const parts = [
-    name,
-    tags.cuisine || '',
-    tags.description || '',
-    tags['addr:city'] || '',
-    tags['addr:district'] || '',
-    tags['addr:street'] || ''
-  ];
-  return parts.join(' ').toLowerCase();
+  return [name, tags.cuisine||'', tags.description||'', tags['addr:city']||'', tags['addr:district']||'', tags['addr:street']||''].join(' ').toLowerCase();
 }
 
-function clearMarkers(){
-  markerCluster.clearLayers();
-  markerMap.clear();
-}
+function clearMarkers(){ markerCluster.clearLayers(); markerMap.clear(); }
 
 function updateMarkers(){
   clearMarkers();
-
-  const filtered = allPlaces.filter(place =>
-    activeFilter === 'all' || place.category === activeFilter
-  );
-
+  const filtered = allPlaces.filter(place => activeFilter === 'all' || place.category === activeFilter);
   filtered.forEach(place => {
     const icon = L.divIcon({
-      className: '',
-      html: `<div class="place-marker">${getIcon(place.category)}</div>`,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
-      popupAnchor: [0, -17]
+      className: '', html: `<div class="place-marker">${getIcon(place.category)}</div>`,
+      iconSize: [34,34], iconAnchor: [17,17], popupAnchor: [0,-17]
     });
-
     const marker = L.marker([place.lat, place.lon], { icon });
-
-    const address = place.tags['addr:street'] ||
-                    place.tags['addr:suburb'] ||
-                    place.tags['addr:city'] ||
-                    place.tags['addr:district'] || 'Aceh';
-
-    const gmapsUrl = 'https://www.google.com/maps/search/?api=1&query=' +
-                     encodeURIComponent(place.lat + ',' + place.lon);
-
-    const osmUrl = 'https://www.openstreetmap.org/?mlat=' +
-                   place.lat + '&mlon=' + place.lon +
-                   '#map=17/' + place.lat + '/' + place.lon;
-
+    const address = place.tags['addr:street'] || place.tags['addr:suburb'] || place.tags['addr:city'] || place.tags['addr:district'] || 'Aceh';
+    const gmapsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(place.lat + ',' + place.lon);
+    const osmUrl = 'https://www.openstreetmap.org/?mlat=' + place.lat + '&mlon=' + place.lon + '#map=17/' + place.lat + '/' + place.lon;
     marker.bindPopup(`
       <div>
         <div class="popup-title">${escapeHtml(place.name)}</div>
-        <div class="popup-info">
-          ${getIcon(place.category)} ${escapeHtml(place.category)}<br>
-          📍 ${escapeHtml(address)}
-        </div>
+        <div class="popup-info">${getIcon(place.category)} ${escapeHtml(place.category)}<br>📍 ${escapeHtml(address)}</div>
         <a class="popup-link" href="${gmapsUrl}" target="_blank" rel="noopener">Google Maps →</a>
         <a class="popup-link" href="${osmUrl}" target="_blank" rel="noopener">OSM →</a>
       </div>
     `);
-
     markerMap.set(place.id, marker);
     markerCluster.addLayer(marker);
   });
@@ -368,73 +256,43 @@ function updateMarkers(){
 function renderPlaces(){
   const container = document.getElementById('places');
   const keyword = document.getElementById('search').value.toLowerCase().trim();
-
   let places = allPlaces.filter(place => {
     const filterOk = activeFilter === 'all' || place.category === activeFilter;
-    const searchOk = !keyword ||
-                     place.name.toLowerCase().includes(keyword) ||
-                     place.searchText.includes(keyword);
+    const searchOk = !keyword || place.name.toLowerCase().includes(keyword) || place.searchText.includes(keyword);
     return filterOk && searchOk;
   });
-
   if (userLocation){
     places.forEach(place => {
       place.distance = distanceKm(userLocation.lat, userLocation.lon, place.lat, place.lon);
     });
     places.sort((a, b) => (a.distance ?? 999999) - (b.distance ?? 999999));
   }
-
   document.getElementById('count').textContent = places.length + ' tempat';
-
   if (!places.length){
-    container.innerHTML = `
-      <div class="empty">
-        😕 Tempat tidak ditemukan.<br><br>
-        Coba kata pencarian lain atau reset filter.
-        <br>
-        <button onclick="resetFilter()">🔄 Reset Filter</button>
-      </div>
-    `;
+    container.innerHTML = `<div class="empty">😕 Tempat tidak ditemukan.<br><br>Coba kata pencarian lain atau reset filter.<br><button onclick="resetFilter()">🔄 Reset Filter</button></div>`;
     return;
   }
-
   container.innerHTML = '';
-
   places.forEach(place => {
-    const address = place.tags['addr:city'] ||
-                    place.tags['addr:district'] ||
-                    place.tags['addr:street'] || 'Aceh';
-
+    const address = place.tags['addr:city'] || place.tags['addr:district'] || place.tags['addr:street'] || 'Aceh';
     const card = document.createElement('div');
     card.className = 'card';
-
     card.innerHTML = `
-      <div class="card-image">
-        ${getIcon(place.category)}
-        <div class="category-badge">${escapeHtml(place.category)}</div>
-      </div>
+      <div class="card-image">${getIcon(place.category)}<div class="category-badge">${escapeHtml(place.category)}</div></div>
       <div class="card-body">
         <div class="card-title">${escapeHtml(place.name)}</div>
         <div class="card-location">📍 ${escapeHtml(address)}</div>
         <div class="card-bottom">
-          <span class="distance">
-            ${place.distance !== undefined ? formatDistance(place.distance) : 'Aceh'}
-          </span>
+          <span class="distance">${place.distance !== undefined ? formatDistance(place.distance) : 'Aceh'}</span>
           <button class="open-btn">Lihat →</button>
         </div>
       </div>
     `;
-
     card.onclick = () => {
       map.setView([place.lat, place.lon], 17, { animate: true });
       const marker = markerMap.get(place.id);
-      if (marker){
-        markerCluster.zoomToShowLayer(marker, () => {
-          marker.openPopup();
-        });
-      }
+      if (marker){ markerCluster.zoomToShowLayer(marker, () => { marker.openPopup(); }); }
     };
-
     container.appendChild(card);
   });
 }
@@ -465,39 +323,24 @@ document.querySelectorAll('.filter').forEach(button => {
 });
 
 function findUser(){
-  if (!navigator.geolocation){
-    alert('Browser tidak mendukung lokasi.');
-    return;
-  }
-
+  if (!navigator.geolocation){ alert('Browser tidak mendukung lokasi.'); return; }
   setStatus('📍 Mencari lokasi kamu...');
-
   navigator.geolocation.getCurrentPosition(
     position => {
-      userLocation = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude
-      };
-
+      userLocation = { lat: position.coords.latitude, lon: position.coords.longitude };
       if (userMarker) map.removeLayer(userMarker);
-
       const userIcon = L.divIcon({
-        className: '',
-        html: '<div class="user-marker"></div>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
+        className: '', html: '<div class="user-marker"></div>',
+        iconSize: [18,18], iconAnchor: [9,9]
       });
-
       userMarker = L.marker([userLocation.lat, userLocation.lon], { icon: userIcon })
-        .addTo(map)
-        .bindPopup('📍 Lokasi kamu');
-
+        .addTo(map).bindPopup('📍 Lokasi kamu');
       map.setView([userLocation.lat, userLocation.lon], 14);
       renderPlaces();
       setStatus('📍 Tempat diurutkan berdasarkan jarak dari kamu');
     },
     error => {
-      alert('Lokasi tidak dapat diakses. Pastikan izin lokasi browser aktif.');
+      alert('Lokasi tidak dapat diakses.');
       setStatus('⚠️ Lokasi tidak dapat diakses');
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
@@ -505,38 +348,15 @@ function findUser(){
 }
 
 function escapeHtml(text){
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
 loadAcehPlaces().catch(error => {
   console.error(error);
   setStatus('⚠️ Gagal mengambil data tempat.');
-
-  document.getElementById('places').innerHTML = `
-    <div class="empty">
-      ⚠️ Data tempat gagal dimuat.<br><br>
-      Kemungkinan server data sedang sibuk.<br>
-      Silakan coba refresh.
-      <br>
-      <button onclick="location.reload()">🔄 Refresh</button>
-    </div>
-  `;
+  document.getElementById('places').innerHTML = `<div class="empty">⚠️ Data tempat gagal dimuat.<br><br>Silakan coba refresh.<br><button onclick="location.reload()">🔄 Refresh</button></div>`;
   document.getElementById('count').textContent = 'Gagal memuat';
 });
-
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && lastLoad > 0 && Date.now() - lastLoad > 30 * 60 * 1000){
-    loadAcehPlaces().catch(error => {
-      console.log('Auto-refresh gagal:', error);
-    });
-  }
-});
 </script>
-
 </body>
 </html>
