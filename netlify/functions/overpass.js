@@ -23,14 +23,20 @@ exports.handler = async (event) => {
 
   for (const endpoint of endpoints) {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
       const response = await fetch(endpoint, {
         method: 'POST',
         body: 'data=' + encodeURIComponent(query),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'User-Agent': 'NangkringAceh/1.0'
-        }
+        },
+        signal: controller.signal
       });
+
+      clearTimeout(timeout);
 
       if (!response.ok) continue;
 
