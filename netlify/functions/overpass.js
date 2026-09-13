@@ -1,63 +1,128 @@
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json"
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  // CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers,
+      body: ""
+    };
   }
 
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: 'Method not allowed' };
+  // Hanya POST
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({
+        error: "Method not allowed"
+      })
+    };
   }
 
-  const query = event.body;
+  const query = event.body || "";
 
+  if (!query.trim()) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({
+        error: "Query Overpass kosong"
+      })
+    };
+  }
+
+  /*
+   * Beberapa server Overpass sebagai fallback.
+   */
   const endpoints = [
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.private.coffee/api/interpreter'
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter"
   ];
 
   for (const endpoint of endpoints) {
+    const controller = new AbortController();
+
+    // Beri waktu lebih lama untuk query seluruh Aceh
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 60000);
+
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      console.log("Mencoba Overpass:", endpoint);
 
       const response = await fetch(endpoint, {
-        method: 'POST',
-        body: 'data=' + encodeURIComponent(query),
+        method: "POST",
+
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'NangkringAceh/1.0'
+          "Content-Type":
+            "application/x-www-form-urlencoded; charset=UTF-8",
+
+          "User-Agent":
+            "NangkringAceh/1.0"
         },
+
+        body:
+          "data=" +
+          encodeURIComponent(query),
+
         signal: controller.signal
       });
 
-      clearTimeout(timeout);
-
-      if (!response.ok) continue;
-
       const text = await response.text();
 
-      if (text && text.length > 100) {
+      console.log(
+        "Overpass status:",
+        endpoint,
+        response.status,
+        "bytes:",
+        text.length
+      );
+
+      if (
+        response.ok &&
+        text.trim().startsWith("{")
+      ) {
         return {
           statusCode: 200,
-          headers: { ...headers, 'Content-Type': 'application/json' },
+          headers,
           body: text
         };
       }
-    } catch (err) {
-      console.log('Endpoint gagal:', endpoint, err.message);
-      continue;
+
+      console.log(
+        "Response Overpass tidak valid:",
+        text.substring(0, 300)
+      );
+
+    } catch (error) {
+
+      console.log(
+        "Endpoint gagal:",
+        endpoint,
+        error.message
+      );
+
+    } finally {
+
+      clearTimeout(timeout);
+
     }
   }
 
   return {
-    statusCode: 500,
+    statusCode: 502,
     headers,
-    body: JSON.stringify({ error: 'Semua endpoint gagal' })
+    body: JSON.stringify({
+      error:
+        "Server Overpass sedang tidak merespons. Silakan coba lagi beberapa saat."
+    })
   };
 };
